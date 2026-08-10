@@ -18,6 +18,9 @@ public class Resume {
 
     private String uploadDate;
 
+    @Column(columnDefinition = "TEXT")
+    private String resumeText;
+
     public Resume() {
     }
 
@@ -55,5 +58,12 @@ public class Resume {
 
     public void setUploadDate(String uploadDate) {
         this.uploadDate = uploadDate;
+    }
+    public String getResumeText() {
+        return resumeText;
+    }
+
+    public void setResumeText(String resumeText) {
+        this.resumeText = resumeText;
     }
 }

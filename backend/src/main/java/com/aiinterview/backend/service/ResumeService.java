@@ -18,6 +18,9 @@ public class ResumeService {
     @Autowired
     private ResumeRepository resumeRepository;
 
+    @Autowired
+    private ResumeTextExtractionService resumeTextExtractionService;
+
     public ApiResponse saveResume(MultipartFile file, String uploadedBy) {
 
         try {
@@ -32,12 +35,16 @@ public class ResumeService {
 
             Files.copy(file.getInputStream(), filePath);
 
+// Extract text from PDF
+            String extractedText = resumeTextExtractionService.extractText(file);
+
             Resume resume = new Resume();
 
             resume.setFileName(fileName);
             resume.setFilePath(filePath.toString());
             resume.setUploadedBy(uploadedBy);
             resume.setUploadDate(LocalDate.now().toString());
+            resume.setResumeText(extractedText);
 
             resumeRepository.save(resume);
 
