@@ -1,7 +1,9 @@
 package com.aiinterview.backend.controller;
 
+import com.aiinterview.backend.dto.InterviewQuestionResponse;
 import com.aiinterview.backend.dto.ResumeAnalysisResponse;
 import com.aiinterview.backend.response.ApiResponse;
+import com.aiinterview.backend.service.InterviewQuestionService;
 import com.aiinterview.backend.service.ResumeAnalysisService;
 import com.aiinterview.backend.service.ResumeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,9 @@ public class ResumeController {
     @Autowired
     private ResumeAnalysisService resumeAnalysisService;
 
+    @Autowired
+    private InterviewQuestionService interviewQuestionService;
+
     @PostMapping("/upload")
     public ApiResponse uploadResume(
             @RequestParam("file") MultipartFile file,
@@ -30,5 +35,10 @@ public class ResumeController {
     @GetMapping("/analyze/latest")
     public ResumeAnalysisResponse analyzeLatestResume() {
         return resumeAnalysisService.analyzeLatestResume();
+    }
+
+    @GetMapping("/questions/latest")
+    public InterviewQuestionResponse generateQuestions() {
+        return interviewQuestionService.generateQuestions();
     }
 }
