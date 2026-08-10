@@ -2,8 +2,11 @@ package com.aiinterview.backend.service;
 
 import com.aiinterview.backend.dto.MockInterviewFeedbackResponse;
 import com.aiinterview.backend.dto.MockInterviewRequest;
+import com.aiinterview.backend.dto.MockInterviewResultRequest;
+import com.aiinterview.backend.dto.MockInterviewResultResponse;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -58,6 +61,63 @@ public class MockInterviewService {
         return new MockInterviewFeedbackResponse(
                 score,
                 feedback
+        );
+    }
+
+    public MockInterviewResultResponse calculateFinalResult(
+            MockInterviewResultRequest request
+    ) {
+
+        List<Integer> scores = request.getScores();
+
+        if (scores == null || scores.isEmpty()) {
+            return new MockInterviewResultResponse(
+                    0,
+                    "Not Attempted",
+                    "Submit at least one answer to receive your final result."
+            );
+        }
+
+        int totalScore = 0;
+        int answerCount = 0;
+
+        for (Integer score : scores) {
+            if (score != null) {
+                totalScore += Math.max(0, Math.min(score, 100));
+                answerCount++;
+            }
+        }
+
+        if (answerCount == 0) {
+            return new MockInterviewResultResponse(
+                    0,
+                    "Not Attempted",
+                    "Submit valid answer scores to receive your final result."
+            );
+        }
+
+        int finalScore = totalScore / answerCount;
+
+        if (finalScore >= 80) {
+            return new MockInterviewResultResponse(
+                    finalScore,
+                    "Excellent",
+                    "Excellent performance. You gave clear and detailed answers."
+            );
+        }
+
+        if (finalScore >= 60) {
+            return new MockInterviewResultResponse(
+                    finalScore,
+                    "Good",
+                    "Good performance. Add more project examples to make your answers stronger."
+            );
+        }
+
+        return new MockInterviewResultResponse(
+                finalScore,
+                "Needs Improvement",
+                "Keep practicing. Focus on clearer explanations and practical examples."
         );
     }
 }

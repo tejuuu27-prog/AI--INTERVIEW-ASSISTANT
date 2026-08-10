@@ -3,6 +3,8 @@ package com.aiinterview.backend.controller;
 import com.aiinterview.backend.dto.InterviewQuestionResponse;
 import com.aiinterview.backend.dto.MockInterviewFeedbackResponse;
 import com.aiinterview.backend.dto.MockInterviewRequest;
+import com.aiinterview.backend.dto.MockInterviewResultRequest;
+import com.aiinterview.backend.dto.MockInterviewResultResponse;
 import com.aiinterview.backend.dto.ResumeAnalysisResponse;
 import com.aiinterview.backend.response.ApiResponse;
 import com.aiinterview.backend.service.InterviewQuestionService;
@@ -53,5 +55,12 @@ public class ResumeController {
             @RequestBody MockInterviewRequest request
     ) {
         return mockInterviewService.evaluateAnswer(request);
+    }
+
+    @PostMapping("/mock-interview/result")
+    public MockInterviewResultResponse calculateFinalResult(
+            @RequestBody MockInterviewResultRequest request
+    ) {
+        return mockInterviewService.calculateFinalResult(request);
     }
 }
