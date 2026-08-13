@@ -7,15 +7,25 @@ import com.aiinterview.backend.dto.MockInterviewResultResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class MockInterviewService {
+
+    private final OllamaService ollamaService;
+
+    public MockInterviewService(OllamaService ollamaService) {
+        this.ollamaService = ollamaService;
+    }
+
+    // ==========================================
+    // AI ANSWER EVALUATION
+    // ==========================================
 
     public MockInterviewFeedbackResponse evaluateAnswer(
             MockInterviewRequest request
     ) {
 
+        String question = request.getQuestion();
         String answer = request.getAnswer();
 
         if (answer == null || answer.trim().isEmpty()) {
@@ -25,44 +35,128 @@ public class MockInterviewService {
             );
         }
 
-        String trimmedAnswer = answer.trim();
-        String normalizedAnswer = trimmedAnswer.toLowerCase(Locale.ROOT);
-        int wordCount = trimmedAnswer.split("\\s+").length;
+        String prompt = """
+                You are an expert technical interviewer.
 
-        int score = 30;
+                Evaluate the candidate's interview answer.
 
-        if (wordCount >= 20) {
-            score += 25;
-        }
+                Interview Question:
+                %s
 
-        if (wordCount >= 50) {
-            score += 20;
-        }
+                Candidate Answer:
+                %s
 
-        if (normalizedAnswer.contains("example")
-                || normalizedAnswer.contains("project")
-                || normalizedAnswer.contains("implemented")
-                || normalizedAnswer.contains("experience")) {
-            score += 15;
-        }
+                Evaluate the answer based on:
+                - Technical correctness
+                - Relevance
+                - Clarity
+                - Depth
+                - Practical understanding
 
-        score = Math.min(score, 100);
+                Give a score from 0 to 100.
 
-        String feedback;
+                Then provide concise and useful feedback.
 
-        if (wordCount < 20) {
-            feedback = "Your answer is too short. Add an explanation and a practical example.";
-        } else if (score >= 80) {
-            feedback = "Strong answer. You explained your point clearly and included useful detail.";
-        } else {
-            feedback = "Good start. Add a real project example and more technical detail to improve your answer.";
-        }
+                IMPORTANT:
+                Return ONLY in this format:
 
-        return new MockInterviewFeedbackResponse(
-                score,
-                feedback
+                SCORE: number
+                FEEDBACK: feedback text
+                """.formatted(
+                question,
+                answer
         );
+
+        try {
+
+            String aiResponse =
+                    ollamaService.generateResponse(prompt);
+
+            int score = extractScore(aiResponse);
+
+            String feedback = extractFeedback(aiResponse);
+
+            return new MockInterviewFeedbackResponse(
+                    score,
+                    feedback
+            );
+
+        } catch (Exception e) {
+
+            return new MockInterviewFeedbackResponse(
+                    0,
+                    "Unable to get AI feedback. Please make sure Ollama is running."
+            );
+        }
     }
+
+    // ==========================================
+    // EXTRACT SCORE FROM OLLAMA RESPONSE
+    // ==========================================
+
+    private int extractScore(String response) {
+
+        try {
+
+            String upper = response.toUpperCase();
+
+            int start = upper.indexOf("SCORE:");
+
+            if (start == -1) {
+                return 50;
+            }
+
+            start += "SCORE:".length();
+
+            StringBuilder number = new StringBuilder();
+
+            for (int i = start; i < upper.length(); i++) {
+
+                char c = upper.charAt(i);
+
+                if (Character.isDigit(c)) {
+                    number.append(c);
+                } else if (number.length() > 0) {
+                    break;
+                }
+            }
+
+            if (number.length() == 0) {
+                return 50;
+            }
+
+            int score = Integer.parseInt(number.toString());
+
+            return Math.max(0, Math.min(score, 100));
+
+        } catch (Exception e) {
+
+            return 50;
+        }
+    }
+
+    // ==========================================
+    // EXTRACT FEEDBACK
+    // ==========================================
+
+    private String extractFeedback(String response) {
+
+        String upper = response.toUpperCase();
+
+        int start = upper.indexOf("FEEDBACK:");
+
+        if (start == -1) {
+            return response.trim();
+        }
+
+        start += "FEEDBACK:".length();
+
+        return response.substring(start).trim();
+    }
+
+    // ==========================================
+    // FINAL MOCK INTERVIEW RESULT
+    // ==========================================
 
     public MockInterviewResultResponse calculateFinalResult(
             MockInterviewResultRequest request
@@ -71,6 +165,7 @@ public class MockInterviewService {
         List<Integer> scores = request.getScores();
 
         if (scores == null || scores.isEmpty()) {
+
             return new MockInterviewResultResponse(
                     0,
                     "Not Attempted",
@@ -82,13 +177,18 @@ public class MockInterviewService {
         int answerCount = 0;
 
         for (Integer score : scores) {
+
             if (score != null) {
-                totalScore += Math.max(0, Math.min(score, 100));
+
+                totalScore +=
+                        Math.max(0, Math.min(score, 100));
+
                 answerCount++;
             }
         }
 
         if (answerCount == 0) {
+
             return new MockInterviewResultResponse(
                     0,
                     "Not Attempted",
@@ -96,9 +196,11 @@ public class MockInterviewService {
             );
         }
 
-        int finalScore = totalScore / answerCount;
+        int finalScore =
+                totalScore / answerCount;
 
         if (finalScore >= 80) {
+
             return new MockInterviewResultResponse(
                     finalScore,
                     "Excellent",
@@ -107,6 +209,7 @@ public class MockInterviewService {
         }
 
         if (finalScore >= 60) {
+
             return new MockInterviewResultResponse(
                     finalScore,
                     "Good",

@@ -11,11 +11,14 @@ import java.util.List;
 public class InterviewQuestionService {
 
     private final ResumeAnalysisService resumeAnalysisService;
+    private final OllamaService ollamaService;
 
     public InterviewQuestionService(
-            ResumeAnalysisService resumeAnalysisService
+            ResumeAnalysisService resumeAnalysisService,
+            OllamaService ollamaService
     ) {
         this.resumeAnalysisService = resumeAnalysisService;
+        this.ollamaService = ollamaService;
     }
 
     public InterviewQuestionResponse generateQuestions() {
@@ -23,59 +26,123 @@ public class InterviewQuestionService {
         ResumeAnalysisResponse analysis =
                 resumeAnalysisService.analyzeLatestResume();
 
+        List<String> skills = analysis.getDetectedSkills();
+
+        if (skills == null) {
+            skills = new ArrayList<>();
+        }
+
+        String skillText = String.join(", ", skills);
+
+        String prompt = """
+                You are an expert technical interviewer.
+
+                Create interview questions for a candidate based on their resume.
+
+                Candidate Resume:
+                File Name: %s
+
+                Detected Skills:
+                %s
+
+                Generate exactly 8 interview questions.
+
+                The questions should include:
+                1. Technical questions about the candidate's skills.
+                2. Questions about projects and practical experience.
+                3. Questions about problem solving.
+                4. Questions that test real-world understanding.
+
+                Make the questions appropriate for a technical job interview.
+
+                IMPORTANT:
+                Return ONLY the questions.
+                Put each question on a separate line.
+                Number them from 1 to 8.
+
+                Do not provide answers.
+                Do not provide explanations.
+                """.formatted(
+                analysis.getFileName(),
+                skillText
+        );
+
         List<String> questions = new ArrayList<>();
 
-        for (String skill : analysis.getDetectedSkills()) {
+        try {
 
-            switch (skill) {
-                case "Java" -> questions.add(
-                        "Explain the difference between an interface and an abstract class in Java."
+            String aiResponse =
+                    ollamaService.generateResponse(prompt);
+
+            String[] lines =
+                    aiResponse.split("\\r?\\n");
+
+            for (String line : lines) {
+
+                String question = line.trim();
+
+                if (question.isEmpty()) {
+                    continue;
+                }
+
+                // Remove numbering such as:
+                // 1.
+                // 2)
+                // 3 -
+                question = question.replaceFirst(
+                        "^\\d+[.)\\-:]\\s*",
+                        ""
                 );
 
-                case "Spring Boot" -> questions.add(
-                        "What is dependency injection in Spring Boot?"
-                );
+                if (!question.isBlank()) {
+                    questions.add(question.trim());
+                }
 
-                case "MySQL", "SQL" -> questions.add(
-                        "What is the difference between INNER JOIN and LEFT JOIN in SQL?"
-                );
+                if (questions.size() >= 8) {
+                    break;
+                }
+            }
 
-                case "MongoDB" -> questions.add(
-                        "What is the difference between MongoDB and a relational database?"
-                );
+        } catch (Exception e) {
 
-                case "Angular" -> questions.add(
-                        "What is data binding in Angular?"
-                );
+            e.printStackTrace();
 
-                case "React" -> questions.add(
-                        "What is the difference between props and state in React?"
-                );
+            // Safe fallback if Ollama is unavailable
+            questions.add(
+                    "Tell me about yourself and your technical background."
+            );
 
-                case "Python" -> questions.add(
-                        "What are Python lists and dictionaries used for?"
-                );
+            for (String skill : skills) {
 
-                case "Git", "GitHub" -> questions.add(
-                        "Explain the difference between git commit and git push."
-                );
+                if (questions.size() >= 8) {
+                    break;
+                }
 
-                default -> questions.add(
+                questions.add(
                         "Describe a project where you used " + skill + "."
                 );
             }
         }
 
         if (questions.isEmpty()) {
+
             questions.add(
-                    "Tell me about yourself and the technical projects you have worked on."
+                    "Tell me about yourself and your technical background."
+            );
+
+            questions.add(
+                    "Describe your most important technical project."
+            );
+
+            questions.add(
+                    "What technical skills are you most confident using?"
             );
         }
 
         return new InterviewQuestionResponse(
                 analysis.getResumeId(),
                 analysis.getFileName(),
-                analysis.getDetectedSkills(),
+                skills,
                 questions
         );
     }

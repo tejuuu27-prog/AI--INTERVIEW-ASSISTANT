@@ -7,9 +7,17 @@ public class ResumeAnalysisResponse {
     private Long resumeId;
     private String fileName;
     private int textLength;
+
     private List<String> detectedSkills;
     private boolean educationDetected;
     private boolean experienceDetected;
+
+    // AI analysis
+    private int score;
+    private List<String> strengths;
+    private List<String> weaknesses;
+    private List<String> suggestions;
+    private String interviewFocus;
 
     public ResumeAnalysisResponse(
             Long resumeId,
@@ -17,7 +25,12 @@ public class ResumeAnalysisResponse {
             int textLength,
             List<String> detectedSkills,
             boolean educationDetected,
-            boolean experienceDetected
+            boolean experienceDetected,
+            int score,
+            List<String> strengths,
+            List<String> weaknesses,
+            List<String> suggestions,
+            String interviewFocus
     ) {
         this.resumeId = resumeId;
         this.fileName = fileName;
@@ -25,6 +38,11 @@ public class ResumeAnalysisResponse {
         this.detectedSkills = detectedSkills;
         this.educationDetected = educationDetected;
         this.experienceDetected = experienceDetected;
+        this.score = score;
+        this.strengths = strengths;
+        this.weaknesses = weaknesses;
+        this.suggestions = suggestions;
+        this.interviewFocus = interviewFocus;
     }
 
     public Long getResumeId() {
@@ -49,5 +67,25 @@ public class ResumeAnalysisResponse {
 
     public boolean isExperienceDetected() {
         return experienceDetected;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public List<String> getStrengths() {
+        return strengths;
+    }
+
+    public List<String> getWeaknesses() {
+        return weaknesses;
+    }
+
+    public List<String> getSuggestions() {
+        return suggestions;
+    }
+
+    public String getInterviewFocus() {
+        return interviewFocus;
     }
 }

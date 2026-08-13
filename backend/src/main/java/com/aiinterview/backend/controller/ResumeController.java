@@ -14,6 +14,7 @@ import com.aiinterview.backend.service.ResumeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.aiinterview.backend.service.OllamaService;
 
 @RestController
 @RequestMapping("/api/resume")
@@ -31,6 +32,9 @@ public class ResumeController {
 
     @Autowired
     private MockInterviewService mockInterviewService;
+
+    @Autowired
+    private OllamaService ollamaService;
 
     @PostMapping("/upload")
     public ApiResponse uploadResume(
@@ -62,5 +66,13 @@ public class ResumeController {
             @RequestBody MockInterviewResultRequest request
     ) {
         return mockInterviewService.calculateFinalResult(request);
+    }
+    @GetMapping("/ai-test")
+    public String testAI() {
+
+        return ollamaService.generateResponse(
+                "You are an AI interview assistant. " +
+                        "Reply with a short greeting to a candidate."
+        );
     }
 }
