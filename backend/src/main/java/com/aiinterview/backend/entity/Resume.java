@@ -18,7 +18,7 @@ public class Resume {
 
     private String uploadDate;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String resumeText;
 
     public Resume() {

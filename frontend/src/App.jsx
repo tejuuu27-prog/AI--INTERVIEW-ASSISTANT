@@ -1,4 +1,4 @@
-import { useState } from "react";
+import  React,{ useState } from "react";
 import "./App.css";
 
 function App() {
@@ -30,6 +30,7 @@ const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   // Final Result
   const [finalResult, setFinalResult] = useState(null);
   const [resultLoading, setResultLoading] = useState(false);
+  const [scores, setScores] = useState([]);
 
 
   // =====================================================
@@ -234,7 +235,15 @@ const handleSubmitAnswer = async () => {
     console.log("AI Feedback:", result);
 
     setFeedbackResult(result);
-  } catch (error) {
+    if (result.score !== undefined && result.score !== null) {
+  setScores((prevScores) => [...prevScores, result.score]);
+}
+    
+
+    
+
+    
+    }catch (error) {
     console.error("Feedback error:", error);
     setUploadStatus("Failed to generate feedback.");
   } finally {
@@ -270,12 +279,10 @@ const handleSubmitAnswer = async () => {
           headers: {
             "Content-Type": "application/json",
           },
-
-          body: JSON.stringify({
-            question: currentQuestion,
-            answer: answer,
-            feedback: feedbackResult,
-          }),
+           body: JSON.stringify({
+  scores: scores,
+}),
+          
         }
       );
 
@@ -305,11 +312,18 @@ const handleSubmitAnswer = async () => {
   // =====================================================
   // LOGIN
   // =====================================================
+const handleLogin = (email, password) => {
 
-  const handleLogin = () => {
-    goToPage("dashboard");
-  };
+  console.log("Email:", email);
+  console.log("Password:", password);
 
+  if (!email || !password) {
+    alert("Please enter email and password.");
+    return;
+  }
+
+  goToPage("dashboard");
+};
 
   // =====================================================
   // MAIN APP
@@ -323,35 +337,44 @@ const handleSubmitAnswer = async () => {
           NAVBAR
       ================================================= */}
 
-      <header className="navbar">
+            <header className="navbar">
+  <div
+    className="logo"
+    onClick={() => goToPage("home")}
+    style={{ cursor: "pointer" }}
+  >
+    AI Interview Assistant
+  </div>
 
-        <div
-          className="logo"
-          onClick={() => goToPage("home")}
-          style={{ cursor: "pointer" }}
-        >
-          AI Interview Assistant
-        </div>
+  <div className="nav-links">
+   <button
+  className="secondary-button nav-link"
+  onClick={() => goToPage("features")}
+>
+  Features
+</button>
 
-        <div className="nav-buttons">
+<button
+  className="secondary-button nav-link"
+  onClick={() => goToPage("how")}
+>
+  How It Works
+</button>
+    <button
+      className="secondary-button"
+      onClick={() => goToPage("login")}
+    >
+      Login
+    </button>
 
-          <button
-            className="secondary-button"
-            onClick={() => goToPage("login")}
-          >
-            Login
-          </button>
-
-          <button
-            className="primary-button"
-            onClick={() => goToPage("register")}
-          >
-            Get Started
-          </button>
-
-        </div>
-
-      </header>
+    <button
+      className="primary-button"
+      onClick={() => goToPage("register")}
+    >
+      Get Started
+    </button>
+  </div>
+</header>
 
 
       {/* =================================================
@@ -394,78 +417,7 @@ const handleSubmitAnswer = async () => {
           </section>
 
 
-          <section className="features-section">
-
-            <h2>
-              Everything you need to prepare
-            </h2>
-
-            <div className="features-grid">
-
-              <FeatureCard
-                icon="📄"
-                title="Resume Analysis"
-                text="Analyze your resume, skills and experience."
-              />
-
-              <FeatureCard
-                icon="❓"
-                title="AI Questions"
-                text="Generate interview questions from your resume."
-              />
-
-              <FeatureCard
-                icon="🎤"
-                title="Mock Interview"
-                text="Answer questions and practice your interview."
-              />
-
-              <FeatureCard
-                icon="📊"
-                title="AI Feedback"
-                text="Receive feedback and a final performance score."
-              />
-
-            </div>
-
-          </section>
-
-
-          <section className="steps-section">
-
-            <h2>
-              How it works
-            </h2>
-
-            <div className="steps-grid">
-
-              <Step
-                number="01"
-                title="Upload Resume"
-                text="Upload your resume to the system."
-              />
-
-              <Step
-                number="02"
-                title="Resume Analysis"
-                text="AI analyzes your skills and experience."
-              />
-
-              <Step
-                number="03"
-                title="Mock Interview"
-                text="Practice personalized questions."
-              />
-
-              <Step
-                number="04"
-                title="Feedback"
-                text="Get AI feedback and your final score."
-              />
-
-            </div>
-
-          </section>
+          
 
         </main>
 
@@ -751,13 +703,21 @@ const handleSubmitAnswer = async () => {
                 Practice personalized interview questions.
               </p>
 
-              <button
-                className="primary-button"
-                disabled={!resumeUploaded}
-                onClick={() => goToPage("mock-interview")}
-              >
-                Start Interview
-              </button>
+             <button
+  className="primary-button"
+  disabled={!resumeUploaded}
+  onClick={() => {
+    if (!resumeUploaded) {
+      setUploadStatus("⚠️ Please upload a resume first.");
+      return;
+    }
+
+    setUploadStatus("");
+    goToPage("mock-interview");
+  }}
+>
+  Start Interview
+</button>
 
             </div>
 
@@ -1708,6 +1668,23 @@ function AuthPage({
   onLogin,
   register
 }) {
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+
+  const handleSubmit = () => {
+    if (!email.trim()) {
+      alert("Please enter your email.");
+      return;
+    }
+
+    if (!password.trim()) {
+      alert("Please enter your password.");
+      return;
+    }
+
+    onLogin(email, password);
+  };
+
   return (
     <section className="auth-section">
 
@@ -1720,39 +1697,28 @@ function AuthPage({
           ← Back
         </button>
 
-
         <div className="auth-icon">
           🤖
         </div>
-
 
         <h1>
           {title}
         </h1>
 
-
         <p>
           {subtitle}
         </p>
 
-
         {register && (
-
           <div className="input-group">
-
-            <label>
-              Name
-            </label>
+            <label>Name</label>
 
             <input
               type="text"
               placeholder="Enter your name"
             />
-
           </div>
-
         )}
-
 
         <div className="input-group">
 
@@ -1763,10 +1729,11 @@ function AuthPage({
           <input
             type="email"
             placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
         </div>
-
 
         <div className="input-group">
 
@@ -1777,18 +1744,19 @@ function AuthPage({
           <input
             type="password"
             placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
         </div>
 
-
         <button
+          type="button"
           className="primary-button auth-button"
-          onClick={onLogin}
+          onClick={handleSubmit}
         >
           {buttonText}
         </button>
-
 
         <div className="switch-auth">
 
@@ -1797,6 +1765,7 @@ function AuthPage({
           </span>
 
           <button
+            type="button"
             onClick={onSwitch}
           >
             {switchButton}
@@ -1809,7 +1778,6 @@ function AuthPage({
     </section>
   );
 }
-
 
 // =====================================================
 // EXPORT

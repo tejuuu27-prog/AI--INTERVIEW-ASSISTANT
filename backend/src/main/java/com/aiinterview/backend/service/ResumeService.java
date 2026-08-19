@@ -6,11 +6,13 @@ import com.aiinterview.backend.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.io.IOException;
 
 @Service
 public class ResumeService {
@@ -21,43 +23,52 @@ public class ResumeService {
     @Autowired
     private ResumeTextExtractionService resumeTextExtractionService;
 
-    public ApiResponse saveResume(MultipartFile file, String uploadedBy) {
+    public ApiResponse saveResume(
+            MultipartFile file,
+            String uploadedBy
+    ) {
 
         try {
 
+            // Create upload directory
             String uploadDir = "uploads/";
 
             Files.createDirectories(Paths.get(uploadDir));
 
-            String originalFileName = file.getOriginalFilename();
+            // Get original filename
+            String fileName = file.getOriginalFilename();
 
-            if (originalFileName == null || originalFileName.isBlank()) {
-                return new ApiResponse(false, "Invalid file name");
+            if (fileName == null || fileName.trim().isEmpty()) {
+                throw new RuntimeException("Invalid file name");
             }
 
-            // Create a unique filename so the same resume
-            // can be uploaded multiple times.
-            String fileName =
-                    System.currentTimeMillis() + "_" + originalFileName;
-
+            // File location
             Path filePath = Paths.get(uploadDir, fileName);
 
+            // Save/overwrite file
             Files.copy(
                     file.getInputStream(),
-                    filePath
+                    filePath,
+                    StandardCopyOption.REPLACE_EXISTING
             );
 
             // Extract text from PDF
             String extractedText =
                     resumeTextExtractionService.extractText(file);
 
+            // Create Resume entity
             Resume resume = new Resume();
 
-            resume.setFileName(originalFileName);
+            resume.setFileName(fileName);
             resume.setFilePath(filePath.toString());
             resume.setUploadedBy(uploadedBy);
             resume.setUploadDate(LocalDate.now().toString());
 
+            // IMPORTANT:
+            // Save extracted resume text
+            resume.setResumeText(extractedText);
+
+            // Save to database
             resumeRepository.save(resume);
 
             return new ApiResponse(
@@ -69,8 +80,7 @@ public class ResumeService {
 
             e.printStackTrace();
 
-            return new ApiResponse(
-                    false,
+            throw new RuntimeException(
                     "File Upload Failed: " + e.getMessage()
             );
         }

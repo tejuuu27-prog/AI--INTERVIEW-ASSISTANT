@@ -19,18 +19,17 @@
 
 .navbar {
   width: 100%;
-  min-height: 72px;
-  padding: 0 7%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 20px 40px;
+  box-sizing: border-box;
+}
 
-  background: #0c1018;
-  border-bottom: 1px solid #1d2430;
-
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
 .brand {
@@ -39,25 +38,38 @@
   cursor: pointer;
   color: #ffffff;
 }
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.nav-link {
+  min-width: 130px;
+  height: 64px;
+  padding: 0 24px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 14px;
+  cursor: pointer;
 }
 
-.nav-button {
+
+
+.nav-link-button {
+  background: none;
   border: none;
-  background: transparent;
-  color: #b7bfcc;
-  padding: 10px 14px;
+  color: white;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 14px;
+  padding: 10px 4px;
+}
+
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .nav-button:hover {
   color: #ffffff;
 }
+
 
 .login-button,
 .signup-button {
@@ -790,4 +802,25 @@
 
 .ai-feedback-section p {
   line-height: 1.6;
+}
+/* Hide scrollbar but keep scrolling */
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+#root {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#root::-webkit-scrollbar {
+  display: none;
 }
